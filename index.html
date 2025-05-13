@@ -53,6 +53,73 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    <script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycby-md1ZSYJZ4TtazzLDjlw6BzedClSJK4HrFoIk0s_2k8148awQhpPjtNkEF6tIJMYm/exec";
+
+  const map = L.map('map').setView([28.6139, 77.2090], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const conflictZone = L.circle([28.6139, 77.2090], {
+    color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: 50000
+  }).addTo(map).bindPopup("Conflict Zone - Avoid Area");
+
+  const safeZone = L.circle([26.9124, 75.7873], {
+    color: 'green', fillColor: '#0f3', fillOpacity: 0.5, radius: 50000
+  }).addTo(map).bindPopup("Safe Zone - Evacuation Possible");
+
+  const alertList = [
+    "Avoid central Delhi due to ongoing conflict.",
+    "Safe corridor from Jaipur open until 6 PM.",
+    "Medical aid available at Jaipur safe zone.",
+    "Heavy shelling reported east of border town."
+  ];
+
+  const alertsDiv = document.getElementById("alerts");
+  alertList.forEach(alert => {
+    const div = document.createElement("div");
+    div.className = "alert-item";
+    div.textContent = alert;
+    alertsDiv.appendChild(div);
+  });
+
+  const reportsDiv = document.getElementById("reports");
+
+  function addReport() {
+    const name = document.getElementById("name").value;
+    const location = document.getElementById("location").value;
+    const contact = document.getElementById("contact").value;
+
+    if (!name || !location || !contact) return;
+
+    // Add report to page
+    const report = document.createElement("div");
+    report.className = "report-item";
+    report.innerHTML = <strong>${name}</strong><br>Last seen at: ${location}<br>Contact: ${contact};
+    reportsDiv.prepend(report);
+
+    // Send data to Google Sheet
+    fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, location, contact })
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log("Success!", response);
+    })
+    .catch(error => {
+      console.error("Error!", error.message);
+    });
+
+    // Clear inputs
+    document.getElementById("name").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("contact").value = "";
+  }
+</script>
     // Initialize the map
     const map = L.map('map').setView([28.6139, 77.2090], 5); // Center on India
 
