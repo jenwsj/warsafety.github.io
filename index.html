@@ -4,106 +4,200 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Civilian Safety & Evacuation System</title>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f2f2f2; }
-    header { background-color: #333; color: white; padding: 1em; text-align: center; }
-    #map { height: 400px; }
-    .section { padding: 1em; }
-    .alerts, .reports { margin-top: 1em; background: white; padding: 1em; border-radius: 5px; }
-    .alert-item, .report-item { border-bottom: 1px solid #ccc; padding: 0.5em 0; }
-    .alert-item:last-child, .report-item:last-child { border: none; }
-    .form-group { margin: 1em 0; }
-    .form-group label { display: block; margin-bottom: 0.3em; }
-    .form-group input { width: 100%; padding: 0.5em; }
-    button { padding: 0.5em 1em; background-color: #333; color: white; border: none; cursor: pointer; }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f7f9fc;
+      color: #333;
+    }
+    header {
+      background-color: #222;
+      color: white;
+      padding: 1rem 2rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 0.5rem;
+    }
+    nav a {
+      color: #ccc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      color: white;
+    }
+    section {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    h2 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    #map {
+      height: 400px;
+      border-radius: 8px;
+    }
+    .alert-item, .report-item {
+      border-bottom: 1px solid #ddd;
+      padding: 0.75rem 0;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .status {
+      margin-top: 1rem;
+      color: green;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #eee;
+      margin-top: 3rem;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
   </style>
 </head>
 <body>
+
   <header>
     <h1>Civilian Safety & Evacuation System</h1>
+    <nav>
+      <a href="#map">Map</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#report">Report Missing</a>
+    </nav>
   </header>
 
-  <div id="map"></div>
+  <section id="about">
+    <h2>About</h2>
+    <p>This system is designed to help civilians during conflict by providing live alerts, marking safe and conflict zones on a map, and enabling the reporting of missing persons to aid rescue efforts.</p>
+  </section>
 
-  <div class="section">
+  <section id="map-section">
+    <h2>Evacuation & Conflict Map</h2>
+    <div id="map"></div>
+  </section>
+
+  <section id="alerts">
     <h2>Live Alerts</h2>
-    <div class="alerts" id="alerts"></div>
+    <div id="alerts-container"></div>
+  </section>
 
-    <h2>Missing Persons Report</h2>
+  <section id="report">
+    <h2>Report a Missing Person</h2>
     <div class="form-group">
-      <label>Name:</label>
+      <label for="name">Name:</label>
       <input type="text" id="name" />
     </div>
     <div class="form-group">
-      <label>Last Seen Location:</label>
+      <label for="location">Last Seen Location:</label>
       <input type="text" id="location" />
     </div>
     <div class="form-group">
-      <label>Contact Info:</label>
+      <label for="contact">Contact Info:</label>
       <input type="text" id="contact" />
     </div>
-    <button onclick="addReport()">Report Missing</button>
+    <button onclick="addReport()">Submit Report</button>
+    <div class="status" id="status"></div>
+    <h3>Reports</h3>
+    <div id="reports"></div>
+  </section>
 
-    <div class="reports" id="reports"></div>
-  </div>
+  <footer>
+    Made by [Your Name] | <a href="https://github.com/jenwsj/warsafety.github.io" target="_blank">GitHub Repo</a>
+  </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycby-md1ZSYJZ4TtazzLDjlw6BzedClSJK4HrFoIk0s_2k8148awQhpPjtNkEF6tIJMYm/exec";
 
-    // Initialize the map
-    const map = L.map('map').setView([28.6139, 77.2090], 5); // Center on India
-
+    const map = L.map('map').setView([28.6139, 77.2090], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Simulated conflict zones (red), safe zones (green)
-    const conflictZone = L.circle([28.6139, 77.2090], {
+    L.circle([28.6139, 77.2090], {
       color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: 50000
-    }).addTo(map).bindPopup("Conflict Zone - Avoid Area");
+    }).addTo(map).bindPopup("Conflict Zone - Avoid");
 
-    const safeZone = L.circle([26.9124, 75.7873], {
+    L.circle([26.9124, 75.7873], {
       color: 'green', fillColor: '#0f3', fillOpacity: 0.5, radius: 50000
-    }).addTo(map).bindPopup("Safe Zone - Evacuation Possible");
+    }).addTo(map).bindPopup("Safe Zone - Evacuation Point");
 
-    // Alerts
     const alertList = [
-      "Avoid central Delhi due to ongoing conflict.",
-      "Safe corridor from Jaipur open until 6 PM.",
-      "Medical aid available at Jaipur safe zone.",
-      "Heavy shelling reported east of border town."
+      "⚠️ Avoid central Delhi due to ongoing conflict.",
+      "✅ Safe corridor from Jaipur open until 6 PM.",
+      "🚑 Medical aid available at Jaipur safe zone.",
+      "⚠️ Heavy shelling reported near border town."
     ];
 
-    const alertsDiv = document.getElementById("alerts");
+    const alertsContainer = document.getElementById("alerts-container");
     alertList.forEach(alert => {
       const div = document.createElement("div");
       div.className = "alert-item";
       div.textContent = alert;
-      alertsDiv.appendChild(div);
+      alertsContainer.appendChild(div);
     });
 
-    // Missing person reports
     const reportsDiv = document.getElementById("reports");
+    const statusDiv = document.getElementById("status");
 
     function addReport() {
       const name = document.getElementById("name").value;
       const location = document.getElementById("location").value;
       const contact = document.getElementById("contact").value;
 
-      if (!name || !location || !contact) return;
+      if (!name || !location || !contact) {
+        statusDiv.textContent = "❌ Please fill in all fields.";
+        statusDiv.style.color = "red";
+        return;
+      }
 
       const report = document.createElement("div");
       report.className = "report-item";
       report.innerHTML = `<strong>${name}</strong><br>Last seen at: ${location}<br>Contact: ${contact}`;
-
       reportsDiv.prepend(report);
 
-      // Send data to Google Sheet
       fetch(scriptURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,17 +205,19 @@
       })
       .then(res => res.json())
       .then(response => {
-        console.log("Success!", response);
+        statusDiv.textContent = "✅ Report submitted successfully!";
+        statusDiv.style.color = "green";
       })
       .catch(error => {
-        console.error("Error!", error.message);
+        statusDiv.textContent = "❌ Failed to submit report.";
+        statusDiv.style.color = "red";
       });
 
-      // Clear inputs
       document.getElementById("name").value = "";
       document.getElementById("location").value = "";
       document.getElementById("contact").value = "";
     }
   </script>
+
 </body>
 </html>
