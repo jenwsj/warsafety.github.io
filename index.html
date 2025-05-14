@@ -149,7 +149,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbwDAI8B9e2SSqzSOD3LsLr1PBpy41xISWtULYGS-6ddTHfwsJGC4e357c2MfbcjhjNSGQ/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwDAI8B9e2SSqzSOD3LsLr1PBpy41xISWtULYGS-6ddTHfwsJGC4e357c2MfbcjhjNSGQ/exec";
 
     const map = L.map('map').setView([28.6139, 77.2090], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -198,13 +198,17 @@ const scriptURL = "https://script.google.com/macros/s/AKfycbwDAI8B9e2SSqzSOD3LsL
       report.innerHTML = `<strong>${name}</strong><br>Last seen at: ${location}<br>Contact: ${contact}`;
       reportsDiv.prepend(report);
 
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("location", location);
+      formData.append("contact", contact);
+
       fetch(scriptURL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, location, contact })
+        body: formData
       })
-      .then(res => res.json())
-      .then(response => {
+      .then(response => response.text())
+      .then(result => {
         statusDiv.textContent = "✅ Report submitted successfully!";
         statusDiv.style.color = "green";
       })
@@ -221,3 +225,4 @@ const scriptURL = "https://script.google.com/macros/s/AKfycbwDAI8B9e2SSqzSOD3LsL
 
 </body>
 </html>
+
